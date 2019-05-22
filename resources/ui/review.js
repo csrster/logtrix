@@ -267,19 +267,13 @@ function receivedText() {
     });
 
 
-    var ctx = document.getElementById('myChart').getContext('2d');
     var seeds = report.seeds;
-    var data = [];
     var byteData = [];
     var objectCountData = [];
     var labels = [];
     for (var seed in seeds) {
         if (seeds.hasOwnProperty(seed)){
             seedObject = seeds[seed];
-            dataItem = {};
-            dataItem.x = seedObject.count;
-            dataItem.y = seedObject.bytes/1000;
-            data.push(dataItem);
             byteData.push(seedObject.bytes);
             objectCountData.push(seedObject.count)
             labels.push(seed)
@@ -292,76 +286,53 @@ function receivedText() {
             x: objectCountData,
             y: byteData,
             mode: 'markers',
-            type: 'scatter'
+            type: 'scatter',
+            text: labels
         }]
     )
 
-    var scatterChart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Size vs. Object Count',
-                data: data,
-                pointBackgroundColor: '#ff6384',
-                pointBorderColor: '#ff6384',
-                pointStyle: 'star'
-            }]
-        },
-        options: {
-            tooltips: {
-                callbacks: {
-                    label: function(tooltipItem, data) {
-                        var label = data.labels[tooltipItem.index];
-                        return label + ': (' + tooltipItem.xLabel + ', ' + tooltipItem.yLabel + ')';
-                    }
-                }
-            },
-            scales: {
-                yAxes: [{
-                    type: 'linear',
-                    position: 'left',
-                    scaleLabel: {
-                        display:true,
-                        labelString: 'kBytes'
-                    }
-                }],
-                xAxes: [{
-                    type: 'linear',
-                    position: 'bottom',
-                    scaleLabel: {
-                        display:true,
-                        labelString: 'URL Count'
-                    }
-                }]
-            }
-        }
-    });
-
-
     Plotly.plot(
         document.getElementById('tester'),
-        [{
-            x: byteData,
-            type:'histogram',
-            histnorm: '',
-            cumulative: {
-                enabled: true
+        [
+            {
+                x: byteData,
+                type:'histogram',
+                histnorm: '',
+                //nbinsx: 100,
+                cumulative: {
+                    enabled: true
+                },
+                marker: {
+                    color: "rgba(255, 100, 102, 0.7)",
+                    line: {
+                        color:  "rgba(255, 100, 102, 1)",
+                        width: 1
+                    }
+                }
             },
-            marker: {
-                color: "rgba(255, 100, 102, 0.7)",
-                line: {
-                    color:  "rgba(255, 100, 102, 1)",
-                    width: 1
+            {
+                x: byteData,
+                type:'histogram',
+                histnorm: '',
+                //nbinsx: 100,
+                cumulative: {
+                    enabled: false
+                },
+                marker: {
+                    color: "rgba(100, 255, 102, 0.7)",
+                    line: {
+                        color:  "rgba(100, 255, 102, 1)",
+                        width: 1
+                    }
                 }
             }
-        }],
+        ],
         {
             title: {
               text: 'Cumulative Histogram of Bytes Harvested'
             },
             yaxis: {
-                type: 'log',
+                type: '',
                 autorange: true,
                 title: {
                     text: 'Seed Count'
@@ -374,25 +345,6 @@ function receivedText() {
             }
         }
     );
-
-    /*var chart = new Chart(ctx, {
-     // The type of chart we want to create
-     type: 'line',
-
-     // The data for our dataset
-     data: {
-     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-     datasets: [{
-     label: 'My First dataset',
-     backgroundColor: 'rgb(255, 99, 132)',
-     borderColor: 'rgb(255, 99, 132)',
-     data: [0, 10, 5, 2, 20, 30, 45]
-     }]
-     },
-
-     // Configuration options go here
-     options: {}
-     });
-     */
+    
 
 }

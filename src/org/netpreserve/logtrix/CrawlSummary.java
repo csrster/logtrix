@@ -2,6 +2,7 @@ package org.netpreserve.logtrix;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.base.Strings;
 import com.google.common.net.InternetDomainName;
 
 import java.io.IOException;
@@ -24,6 +25,10 @@ public class CrawlSummary {
     private Map<String, Stats> mimeTypes = new HashMap<>();
     private Map<Long, Stats> sizeHisto = new TreeMap<>();
     private Map<String, Stats> registeredDomains = new HashMap<>();
+    private Map<String, Stats> seeds = new HashMap<>();
+
+    // Lookup map to find the seed for each URI
+    private static Map<String, String> seedForURI = new HashMap<>();
 
     /**
      * Builds a global crawl summary (not broken down).
@@ -72,6 +77,16 @@ public class CrawlSummary {
 
     private void add(CrawlDataItem item) {
         String mimeType = canonicalizeMimeType(item.getMimeType());
+        //What is this? If there is already a mapping for this mimeType key in the Map, the computeIfAbsent just returns it. Otherwise it creates and inserts a
+        //new empty Stats objects and inserts it in into the map as well as returning a reference to it so this item can be added. So its equiv to
+        //
+        // stats = mimeTypes.get(mimeType)
+        // if (stats == null) {
+        //      //make a new one, insert it then return that
+        // }
+        // stats.add(item)
+        //
+        seeds.computeIfAbsent(seedForURI.get(item.getURL()), seed -> new Stats()).add(item); //for now pretend everything is under the same seed
         mimeTypes.computeIfAbsent(mimeType, m -> new Stats()).add(item);
         statusCodes.computeIfAbsent(item.getStatusCode(), code -> new Stats(StatusCodes.describe(code))).add(item);
         // FIXME: pretty sure this bucketing is wrong
@@ -91,7 +106,7 @@ public class CrawlSummary {
     /**
      * Returns a new CrawlSummary with the mime-type and status-code lists limited to the top-N results.
      */
-    public CrawlSummary topN(long n) {
+/*    public CrawlSummary topN(long n) {
         CrawlSummary summary = new CrawlSummary();
         summary.totals = totals;
         summary.mimeTypes = mimeTypes.entrySet().stream().parallel()
@@ -120,7 +135,7 @@ public class CrawlSummary {
                         LinkedHashMap::new));
         summary.sizeHisto = sizeHisto;
         return summary;
-    }
+    }*/
 
     public Stats getTotals() {
         return totals;
@@ -142,6 +157,10 @@ public class CrawlSummary {
         return registeredDomains;
     }
 
+    public Map<String, Stats> getSeeds() {
+        return seeds;
+    }
+
     enum GroupBy {
         NONE, HOST, RDOMAIN
     }
@@ -150,6 +169,11 @@ public class CrawlSummary {
     public static void main(String[] args) throws IOException {
         List<String> files = new ArrayList<>();
         Function<Iterable<CrawlDataItem>, Object> summarisier = CrawlSummary::build;
+
+        for (int i = 0; i < args.length; i++) {
+            files.add(args[i]);
+        }
+/*
         long topN = 0;
         for (int i = 0; i < args.length; i++) {
             if (args[i].startsWith("-")) {
@@ -183,6 +207,7 @@ public class CrawlSummary {
                 files.add(args[i]);
             }
         }
+*/
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
@@ -191,9 +216,32 @@ public class CrawlSummary {
         objectMapper.setSerializationInclusion(NON_NULL);
 
         try (CrawlLogIterator log = new CrawlLogIterator(Paths.get(files.get(0)))) {
+            for (CrawlDataItem item: log) {
+                String key = item.getURL();
+                String value = item.getParentURL();
+                if (Strings.isNullOrEmpty(value) || value.equals("-")) {
+                    value = key;
+                }
+                seedForURI.put(key, value);
+            }
+        }
+
+        for (String uri: seedForURI.keySet()) {
+            boolean found = false;
+            while (!found) {
+                String currentAncestor= seedForURI.get(uri);
+                String nextParent = seedForURI.get(currentAncestor);
+                if (nextParent.equals(currentAncestor)) {
+                    found = true;
+                }
+                seedForURI.put(uri, nextParent);
+            }
+        }
+
+        try (CrawlLogIterator log = new CrawlLogIterator(Paths.get(files.get(0)))) {
             Object summary = summarisier.apply(log);
 
-            // limit to top N results
+           /* // limit to top N results
             if (topN > 0) {
                 if (summary instanceof Map) {
                     Map<Object, CrawlSummary> map = new HashMap<>();
@@ -206,7 +254,7 @@ public class CrawlSummary {
                 } else {
                     throw new AssertionError("unexpected");
                 }
-            }
+            }*/
 
             objectMapper.writeValue(System.out, summary);
         }

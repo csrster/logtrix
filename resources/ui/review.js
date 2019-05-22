@@ -210,4 +210,60 @@ console.log(codeData);
     ]
   });
 
+    let seedData = [];
+
+   Object.keys(report.seeds).forEach(function(seed) {
+     let values = report.seeds[seed];
+     let entry = {};
+     entry.seed = seed;
+     entry.count = values.count;
+     entry.duplicate = values.count-values.uniqueCount;
+     entry.duppercent = (values.count-values.uniqueCount)*100/values.count;
+     entry.bytes = values.bytes;
+     entry.dupbytes = values.bytes-values.uniqueBytes;
+     entry.dupbytesperc = (values.bytes-values.uniqueBytes)*100/values.bytes;
+     entry.rate = ((values.bytes/8)/(values.millis/1000))/1024;
+     entry.firstTime = values.firstTime;
+     entry.lastTime = values.lastTime;
+
+     seedData.push(entry);
+   });
+
+    $('#seed-table').DataTable({
+    data: seedData,
+    columns: [
+        { data: 'seed' },
+        {
+          data: 'count',
+          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+        },
+        {
+          data: 'duplicate',
+          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+        },
+        {
+          data: 'duppercent',
+          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+        },
+        {
+          data: 'bytes',
+          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+        },
+        {
+          data: 'dupbytes',
+          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+        },
+        {
+          data: 'dupbytesperc',
+          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+        },
+        {
+          data: 'rate',
+          render: $.fn.dataTable.render.number( ',', '.', 2)
+        },
+        { data: 'firstTime' },
+        { data: 'lastTime' },
+    ]
+  });
+
 }

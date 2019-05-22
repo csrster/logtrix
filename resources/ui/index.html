@@ -33,6 +33,9 @@
         <li class="nav-item">
           <a class="nav-link" href="#" onClick="show(this, 'domain-report')">Domains</a>
         </li>
+          <li class="nav-item">
+           <a class="nav-link" href="#" onClick="show(this, 'seed-report')">Seeds</a>
+         </li>
       </ul>
 
       <div class="container" id="overview-report" style="display: none">
@@ -111,7 +114,28 @@
                 </tbody>
             </table>
       </div>
-
+        <div class="container-fluid" id="seed-report" style="display: none">
+              <table id="seed-table"
+                data-page-length='25'
+                class="table table-condensed table-hover table-striped">
+                  <thead>
+                      <tr>
+                          <th class="text-nowrap">Seed</th>
+                          <th>Count</th>
+                          <th>Duplicates</th>
+                          <th>Duplicates %</th>
+                          <th>Bytes</th>
+                          <th>Duplicate bytes</th>
+                          <th>Duplicate bytes %</th>
+                          <th>Avg. KB/sec</th>
+                          <th>First Capture</th>
+                          <th>Last Capture</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+              </table>
+        </div>
     </div>
 
 

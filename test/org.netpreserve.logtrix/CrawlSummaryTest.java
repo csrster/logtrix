@@ -26,4 +26,9 @@ public class CrawlSummaryTest {
         }
     }
 
+    @Test
+    public void testMain() throws Exception {
+         CrawlSummary.main(new String[]{"/home/csr/projects/logtrix/crawl1.log"});
+    }
+
 }

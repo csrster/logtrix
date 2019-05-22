@@ -292,13 +292,13 @@ function receivedText() {
     )
 
     Plotly.plot(
-        document.getElementById('tester'),
+        document.getElementById('hist1'),
         [
             {
                 x: byteData,
                 type:'histogram',
                 histnorm: '',
-                //nbinsx: 100,
+                nbinsx: 400,
                 cumulative: {
                     enabled: true
                 },
@@ -309,12 +309,35 @@ function receivedText() {
                         width: 1
                     }
                 }
+            }
+        ],
+        {
+            title: {
+              text: 'Cumulative Histogram of Bytes Harvested'
             },
+            yaxis: {
+                type: 'log',
+                autorange: true,
+                title: {
+                    text: 'Seed Count'
+                }
+            },
+            xaxis: {
+                title: {
+                    text: 'Bytes Harvested'
+                }
+            }
+        }
+    );
+
+    Plotly.plot(
+        document.getElementById('hist2'),
+        [
             {
                 x: byteData,
                 type:'histogram',
                 histnorm: '',
-                //nbinsx: 100,
+                nbinsx: 400,
                 cumulative: {
                     enabled: false
                 },
@@ -329,10 +352,10 @@ function receivedText() {
         ],
         {
             title: {
-              text: 'Cumulative Histogram of Bytes Harvested'
+                text: 'Histogram of Bytes Harvested'
             },
             yaxis: {
-                type: '',
+                type: 'log',
                 autorange: true,
                 title: {
                     text: 'Seed Count'
@@ -345,6 +368,5 @@ function receivedText() {
             }
         }
     );
-    
 
 }

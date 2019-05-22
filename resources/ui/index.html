@@ -35,7 +35,14 @@
         </li>
           <li class="nav-item">
            <a class="nav-link" href="#" onClick="show(this, 'seed-report')">Seeds</a>
-         </li>
+          </li>
+          <li>
+          <li class="nav-item">
+              <a class="nav-link" href="#" onClick="show(this, 'chart')">Size vs. Count</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="#" onClick="show(this, 'histogram')">Histogram</a>
+          </li>
       </ul>
 
       <div class="container" id="overview-report" style="display: none">
@@ -136,6 +143,13 @@
                   </tbody>
               </table>
         </div>
+        <div class="container-fluid" id="chart" style="display: none">
+            <div id="plotly_scatter" style="width:900px;height:700px;"></div>
+            <canvas id="myChart"></canvas>
+        </div>
+        <div class="container-fluid" id="histogram" style="display: none">
+            <div id="tester" style="width:900px;height:700px;"></div>
+        </div>
     </div>
 
 
@@ -145,6 +159,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="review.js"></script>
   </body>
 </html>

@@ -1,269 +1,398 @@
 function show(parent, choice) {
-  $("#reporter > div").css("display", "none");
-  $("#"+choice).css("display","block");
-  $(".nav-link").removeClass("active");
-  $(parent).addClass("active");
+    $("#reporter > div").css("display", "none");
+    $("#"+choice).css("display","block");
+    $(".nav-link").removeClass("active");
+    $(parent).addClass("active");
 }
 
 function handleFileSelect() {
-  if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
-    alert('The File APIs are not fully supported in this browser.');
-    return;
-  }
+    if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
+        alert('The File APIs are not fully supported in this browser.');
+        return;
+    }
 
-  input = document.getElementById('fileinput');
-  if (!input) {
-    alert("Um, couldn't find the fileinput element.");
-  }
-  else if (!input.files) {
-    alert("This browser doesn't seem to support the `files` property of file inputs.");
-  }
-  else if (!input.files[0]) {
-    alert("Please select a file before clicking 'Load'");
-  }
-  else {
-    file = input.files[0];
-    fr = new FileReader();
-    fr.onload = receivedText;
-    fr.readAsText(file);
-  }
+    input = document.getElementById('fileinput');
+    if (!input) {
+        alert("Um, couldn't find the fileinput element.");
+    }
+    else if (!input.files) {
+        alert("This browser doesn't seem to support the `files` property of file inputs.");
+    }
+    else if (!input.files[0]) {
+        alert("Please select a file before clicking 'Load'");
+    }
+    else {
+        file = input.files[0];
+        fr = new FileReader();
+        fr.onload = receivedText;
+        fr.readAsText(file);
+    }
 }
 
 function receivedText() {
-  let report = JSON.parse(fr.result);
-  $("#file-picker").css("display","none");
-  $("#reporter").css("display","block");
-  $("#overview-report").css("display","block");
+    let report = JSON.parse(fr.result);
+    $("#file-picker").css("display","none");
+    $("#reporter").css("display","block");
+    $("#overview-report").css("display","block");
 
-  $("#totalCount").text(report.totals.count.toLocaleString());
-  $("#totalBytes").text(report.totals.bytes.toLocaleString());
+    $("#totalCount").text(report.totals.count.toLocaleString());
+    $("#totalBytes").text(report.totals.bytes.toLocaleString());
 
-  let codeData = [];
+    let codeData = [];
 
-  Object.keys(report.statusCodes).forEach(function(code) {
-    let codeValues = report.statusCodes[code];
-    let entry = {};
-    entry.code = code;
-    entry.description = codeValues.description==null ? '' : codeValues.description;
-    entry.count = codeValues.count;
-    entry.duplicate = codeValues.count-codeValues.uniqueCount;
-    entry.duppercent = (codeValues.count-codeValues.uniqueCount)*100/codeValues.count;
-    entry.bytes = codeValues.bytes;
-    entry.dupbytes = codeValues.bytes-codeValues.uniqueBytes;
-    entry.dupbytesperc = (codeValues.bytes-codeValues.uniqueBytes)*100/codeValues.bytes;
-    entry.rate = ((codeValues.bytes/8)/(codeValues.millis/1000))/1024;
-    entry.firstTime = codeValues.firstTime;
-    entry.lastTime = codeValues.lastTime;
+    Object.keys(report.statusCodes).forEach(function(code) {
+        let codeValues = report.statusCodes[code];
+        let entry = {};
+        entry.code = code;
+        entry.description = codeValues.description==null ? '' : codeValues.description;
+        entry.count = codeValues.count;
+        entry.duplicate = codeValues.count-codeValues.uniqueCount;
+        entry.duppercent = (codeValues.count-codeValues.uniqueCount)*100/codeValues.count;
+        entry.bytes = codeValues.bytes;
+        entry.dupbytes = codeValues.bytes-codeValues.uniqueBytes;
+        entry.dupbytesperc = (codeValues.bytes-codeValues.uniqueBytes)*100/codeValues.bytes;
+        entry.rate = ((codeValues.bytes/8)/(codeValues.millis/1000))/1024;
+        entry.firstTime = codeValues.firstTime;
+        entry.lastTime = codeValues.lastTime;
 
-    codeData.push(entry);
-  });
+        codeData.push(entry);
+    });
 
-console.log(codeData);
+    console.log(codeData);
 
-  $('#status-code-table').DataTable({
-    data: codeData,
-    columns: [
-        { data: 'code' },
-        { data: 'description' },
-        {
-          data: 'count',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duplicate',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duppercent',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'bytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytesperc',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'rate',
-          render: $.fn.dataTable.render.number( ',', '.', 2)
-        },
-        { data: 'firstTime' },
-        { data: 'lastTime' },
-    ]
-  });
+    $('#status-code-table').DataTable({
+        data: codeData,
+        columns: [
+            { data: 'code' },
+            { data: 'description' },
+            {
+                data: 'count',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duplicate',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duppercent',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'bytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytesperc',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'rate',
+                render: $.fn.dataTable.render.number( ',', '.', 2)
+            },
+            { data: 'firstTime' },
+            { data: 'lastTime' },
+        ]
+    });
 
-  let mimeData = [];
+    let mimeData = [];
 
-  Object.keys(report.mimeTypes).forEach(function(type) {
-    let typeValues = report.mimeTypes[type];
-    let entry = {};
-    entry.type = type;
-    entry.count = typeValues.count;
-    entry.duplicate = typeValues.count-typeValues.uniqueCount;
-    entry.duppercent = (typeValues.count-typeValues.uniqueCount)*100/typeValues.count;
-    entry.bytes = typeValues.bytes;
-    entry.dupbytes = typeValues.bytes-typeValues.uniqueBytes;
-    entry.dupbytesperc = (typeValues.bytes-typeValues.uniqueBytes)*100/typeValues.bytes;
-    entry.rate = ((typeValues.bytes/8)/(typeValues.millis/1000))/1024;
-    entry.firstTime = typeValues.firstTime;
-    entry.lastTime = typeValues.lastTime;
+    Object.keys(report.mimeTypes).forEach(function(type) {
+        let typeValues = report.mimeTypes[type];
+        let entry = {};
+        entry.type = type;
+        entry.count = typeValues.count;
+        entry.duplicate = typeValues.count-typeValues.uniqueCount;
+        entry.duppercent = (typeValues.count-typeValues.uniqueCount)*100/typeValues.count;
+        entry.bytes = typeValues.bytes;
+        entry.dupbytes = typeValues.bytes-typeValues.uniqueBytes;
+        entry.dupbytesperc = (typeValues.bytes-typeValues.uniqueBytes)*100/typeValues.bytes;
+        entry.rate = ((typeValues.bytes/8)/(typeValues.millis/1000))/1024;
+        entry.firstTime = typeValues.firstTime;
+        entry.lastTime = typeValues.lastTime;
 
-    mimeData.push(entry);
-  });
+        mimeData.push(entry);
+    });
 
-  $('#mimetype-table').DataTable({
-    data: mimeData,
-    columns: [
-        { data: 'type' },
-        {
-          data: 'count',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duplicate',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duppercent',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'bytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytesperc',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'rate',
-          render: $.fn.dataTable.render.number( ',', '.', 2)
-        },
-        { data: 'firstTime' },
-        { data: 'lastTime' },
-    ]
-  });
+    $('#mimetype-table').DataTable({
+        data: mimeData,
+        columns: [
+            { data: 'type' },
+            {
+                data: 'count',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duplicate',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duppercent',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'bytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytesperc',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'rate',
+                render: $.fn.dataTable.render.number( ',', '.', 2)
+            },
+            { data: 'firstTime' },
+            { data: 'lastTime' },
+        ]
+    });
 
-  let domainData = [];
+    let domainData = [];
 
-  Object.keys(report.registeredDomains).forEach(function(domain) {
-    let values = report.registeredDomains[domain];
-    let entry = {};
-    entry.domain = domain;
-    entry.count = values.count;
-    entry.duplicate = values.count-values.uniqueCount;
-    entry.duppercent = (values.count-values.uniqueCount)*100/values.count;
-    entry.bytes = values.bytes;
-    entry.dupbytes = values.bytes-values.uniqueBytes;
-    entry.dupbytesperc = (values.bytes-values.uniqueBytes)*100/values.bytes;
-    entry.rate = ((values.bytes/8)/(values.millis/1000))/1024;
-    entry.firstTime = values.firstTime;
-    entry.lastTime = values.lastTime;
+    Object.keys(report.registeredDomains).forEach(function(domain) {
+        let values = report.registeredDomains[domain];
+        let entry = {};
+        entry.domain = domain;
+        entry.count = values.count;
+        entry.duplicate = values.count-values.uniqueCount;
+        entry.duppercent = (values.count-values.uniqueCount)*100/values.count;
+        entry.bytes = values.bytes;
+        entry.dupbytes = values.bytes-values.uniqueBytes;
+        entry.dupbytesperc = (values.bytes-values.uniqueBytes)*100/values.bytes;
+        entry.rate = ((values.bytes/8)/(values.millis/1000))/1024;
+        entry.firstTime = values.firstTime;
+        entry.lastTime = values.lastTime;
 
-    domainData.push(entry);
-  });
+        domainData.push(entry);
+    });
 
-  $('#domain-table').DataTable({
-    data: domainData,
-    columns: [
-        { data: 'domain' },
-        {
-          data: 'count',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duplicate',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duppercent',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'bytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytesperc',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'rate',
-          render: $.fn.dataTable.render.number( ',', '.', 2)
-        },
-        { data: 'firstTime' },
-        { data: 'lastTime' },
-    ]
-  });
+    $('#domain-table').DataTable({
+        data: domainData,
+        columns: [
+            { data: 'domain' },
+            {
+                data: 'count',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duplicate',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duppercent',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'bytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytesperc',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'rate',
+                render: $.fn.dataTable.render.number( ',', '.', 2)
+            },
+            { data: 'firstTime' },
+            { data: 'lastTime' },
+        ]
+    });
 
     let seedData = [];
 
-   Object.keys(report.seeds).forEach(function(seed) {
-     let values = report.seeds[seed];
-     let entry = {};
-     entry.seed = seed;
-     entry.count = values.count;
-     entry.duplicate = values.count-values.uniqueCount;
-     entry.duppercent = (values.count-values.uniqueCount)*100/values.count;
-     entry.bytes = values.bytes;
-     entry.dupbytes = values.bytes-values.uniqueBytes;
-     entry.dupbytesperc = (values.bytes-values.uniqueBytes)*100/values.bytes;
-     entry.rate = ((values.bytes/8)/(values.millis/1000))/1024;
-     entry.firstTime = values.firstTime;
-     entry.lastTime = values.lastTime;
+    Object.keys(report.seeds).forEach(function(seed) {
+        let values = report.seeds[seed];
+        let entry = {};
+        entry.seed = seed;
+        entry.count = values.count;
+        entry.duplicate = values.count-values.uniqueCount;
+        entry.duppercent = (values.count-values.uniqueCount)*100/values.count;
+        entry.bytes = values.bytes;
+        entry.dupbytes = values.bytes-values.uniqueBytes;
+        entry.dupbytesperc = (values.bytes-values.uniqueBytes)*100/values.bytes;
+        entry.rate = ((values.bytes/8)/(values.millis/1000))/1024;
+        entry.firstTime = values.firstTime;
+        entry.lastTime = values.lastTime;
 
-     seedData.push(entry);
-   });
+        seedData.push(entry);
+    });
 
     $('#seed-table').DataTable({
-    data: seedData,
-    columns: [
-        { data: 'seed' },
-        {
-          data: 'count',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+        data: seedData,
+        columns: [
+            { data: 'seed' },
+            {
+                data: 'count',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duplicate',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'duppercent',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'bytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytes',
+                render: $.fn.dataTable.render.number( ',', '.', 0, '' )
+            },
+            {
+                data: 'dupbytesperc',
+                render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
+            },
+            {
+                data: 'rate',
+                render: $.fn.dataTable.render.number( ',', '.', 2)
+            },
+            { data: 'firstTime' },
+            { data: 'lastTime' },
+        ]
+    });
+
+
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var seeds = report.seeds;
+    var data = [];
+    var byteData = [];
+    var objectCountData = [];
+    var labels = [];
+    for (var seed in seeds) {
+        if (seeds.hasOwnProperty(seed)){
+            seedObject = seeds[seed];
+            dataItem = {};
+            dataItem.x = seedObject.count;
+            dataItem.y = seedObject.bytes/1000;
+            data.push(dataItem);
+            byteData.push(seedObject.bytes);
+            objectCountData.push(seedObject.count)
+            labels.push(seed)
+        }
+    }
+
+    Plotly.plot(
+        document.getElementById("plotly_scatter"),
+        [{
+            x: objectCountData,
+            y: byteData,
+            mode: 'markers',
+            type: 'scatter'
+        }]
+    )
+
+    var scatterChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Size vs. Object Count',
+                data: data,
+                pointBackgroundColor: '#ff6384',
+                pointBorderColor: '#ff6384',
+                pointStyle: 'star'
+            }]
         },
+        options: {
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var label = data.labels[tooltipItem.index];
+                        return label + ': (' + tooltipItem.xLabel + ', ' + tooltipItem.yLabel + ')';
+                    }
+                }
+            },
+            scales: {
+                yAxes: [{
+                    type: 'linear',
+                    position: 'left',
+                    scaleLabel: {
+                        display:true,
+                        labelString: 'kBytes'
+                    }
+                }],
+                xAxes: [{
+                    type: 'linear',
+                    position: 'bottom',
+                    scaleLabel: {
+                        display:true,
+                        labelString: 'URL Count'
+                    }
+                }]
+            }
+        }
+    });
+
+
+    Plotly.plot(
+        document.getElementById('tester'),
+        [{
+            x: byteData,
+            type:'histogram',
+            histnorm: '',
+            cumulative: {
+                enabled: true
+            },
+            marker: {
+                color: "rgba(255, 100, 102, 0.7)",
+                line: {
+                    color:  "rgba(255, 100, 102, 1)",
+                    width: 1
+                }
+            }
+        }],
         {
-          data: 'duplicate',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'duppercent',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'bytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytes',
-          render: $.fn.dataTable.render.number( ',', '.', 0, '' )
-        },
-        {
-          data: 'dupbytesperc',
-          render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
-        },
-        {
-          data: 'rate',
-          render: $.fn.dataTable.render.number( ',', '.', 2)
-        },
-        { data: 'firstTime' },
-        { data: 'lastTime' },
-    ]
-  });
+            title: {
+              text: 'Cumulative Histogram of Bytes Harvested'
+            },
+            yaxis: {
+                type: 'log',
+                autorange: true,
+                title: {
+                    text: 'Seed Count'
+                }
+            },
+            xaxis: {
+                title: {
+                    text: 'Bytes Harvested'
+                }
+            }
+        }
+    );
+
+    /*var chart = new Chart(ctx, {
+     // The type of chart we want to create
+     type: 'line',
+
+     // The data for our dataset
+     data: {
+     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+     datasets: [{
+     label: 'My First dataset',
+     backgroundColor: 'rgb(255, 99, 132)',
+     borderColor: 'rgb(255, 99, 132)',
+     data: [0, 10, 5, 2, 20, 30, 45]
+     }]
+     },
+
+     // Configuration options go here
+     options: {}
+     });
+     */
 
 }

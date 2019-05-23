@@ -28,7 +28,7 @@ public class CrawlSummary {
     private Map<String, Stats> seeds = new HashMap<>();
 
     // Lookup map to find the seed for each URI
-    private static Map<String, String> seedForURI = new HashMap<>();
+    private static Map<UriPlusDiscoveryPath, UriPlusDiscoveryPath> seedForURI = new HashMap<>();
 
     /**
      * Builds a global crawl summary (not broken down).
@@ -86,7 +86,19 @@ public class CrawlSummary {
         // }
         // stats.add(item)
         //
-        seeds.computeIfAbsent(seedForURI.get(item.getURL()), seed -> new Stats()).add(item); //for now pretend everything is under the same seed
+        String discoveryPath = "";
+        if (Strings.isNullOrEmpty(item.getHoppath()) || item.getHoppath().equals("-")) {
+            discoveryPath = "";
+        } else {
+            discoveryPath = item.getHoppath();
+        }
+        final UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), discoveryPath);
+        try {
+            seeds.computeIfAbsent(seedForURI.get(key).uri, seed -> new Stats()).add(item);
+        } catch (NullPointerException e) {
+            System.err.println("Did not find seed for item " + key);
+            System.exit(1);
+        }
         mimeTypes.computeIfAbsent(mimeType, m -> new Stats()).add(item);
         statusCodes.computeIfAbsent(item.getStatusCode(), code -> new Stats(StatusCodes.describe(code))).add(item);
         // FIXME: pretty sure this bucketing is wrong
@@ -217,24 +229,43 @@ public class CrawlSummary {
 
         try (CrawlLogIterator log = new CrawlLogIterator(Paths.get(files.get(0)))) {
             for (CrawlDataItem item: log) {
-                String key = item.getURL();
-                String value = item.getParentURL();
-                if (Strings.isNullOrEmpty(value) || value.equals("-")) {
-                    value = key;
+                String discoveryPath = "";
+                if (Strings.isNullOrEmpty(item.getHoppath()) || item.getHoppath().equals("-")) {
+                    discoveryPath = "";
+                } else {
+                    discoveryPath = item.getHoppath();
+                }
+                UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), discoveryPath);
+                UriPlusDiscoveryPath value = new UriPlusDiscoveryPath(item.getParentURL(), key.getParentDiscoveryPath());
+                if (discoveryPath.equals("")) {
+                    value = key;  //So the seed which gave rise to a seed uri was itself, which is logical enough
+                }
+                if (key.uri.equals("http://www.rwpanel.dk/")) {
+                    System.err.println("Initialising with " + key + value);
                 }
                 seedForURI.put(key, value);
             }
         }
 
-        for (String uri: seedForURI.keySet()) {
+        System.err.println("Starting seed-detection");
+        for (UriPlusDiscoveryPath uriPlusDiscoveryPath: seedForURI.keySet()) {
+            int depth = 0;
             boolean found = false;
-            while (!found) {
-                String currentAncestor= seedForURI.get(uri);
-                String nextParent = seedForURI.get(currentAncestor);
-                if (nextParent.equals(currentAncestor)) {
+            while (!seedForURI.get(uriPlusDiscoveryPath).discoveryPath.equals("")) {
+                depth ++;
+                if (depth > 50) {
+                    System.err.println("Looks pathological for " + uriPlusDiscoveryPath);
                     found = true;
                 }
-                seedForURI.put(uri, nextParent);
+                UriPlusDiscoveryPath currentAncestor= seedForURI.get(uriPlusDiscoveryPath);
+                UriPlusDiscoveryPath nextParent = seedForURI.get(currentAncestor);
+                //if (nextParent == null) {
+                //    System.err.println("No parent for " + currentAncestor);
+                //}
+                //if (nextParent.discoveryPath.equals("")){
+                //    found = true;
+                //}
+                seedForURI.put(uriPlusDiscoveryPath, nextParent);
             }
         }
 
@@ -267,4 +298,45 @@ public class CrawlSummary {
                 "  -g {host,registered-domain}   Group summary by host or registered domain\n" +
                 "  -n N                          Limit to top N results");
     }
+
+    static class UriPlusDiscoveryPath {
+        String uri;
+        String discoveryPath;
+
+        public String getParentDiscoveryPath() {
+            if (discoveryPath.length() == 0) {
+                return discoveryPath;
+            } else {
+                return discoveryPath.substring(0, discoveryPath.length() - 1);
+            }
+        }
+
+        public UriPlusDiscoveryPath(String uri, String discoveryPath) {
+            this.uri = uri;
+            this.discoveryPath = discoveryPath;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof UriPlusDiscoveryPath)) return false;
+            UriPlusDiscoveryPath that = (UriPlusDiscoveryPath) o;
+            return uri.equals(that.uri) &&
+                    discoveryPath.equals(that.discoveryPath);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(uri, discoveryPath);
+        }
+
+        @Override
+        public String toString() {
+            return "UriPlusDiscoveryPath{" +
+                    "uri='" + uri + '\'' +
+                    ", discoveryPath='" + discoveryPath + '\'' +
+                    '}';
+        }
+    }
+
 }

@@ -288,7 +288,11 @@ function receivedText() {
             mode: 'markers',
             type: 'scatter',
             text: labels
-        }]
+        }] ,
+        {
+            hovermode: "closest",
+            title: "closest"
+        }
     )
 
     Plotly.plot(

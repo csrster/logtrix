@@ -140,39 +140,6 @@ public class CrawlSummary {
         return String.format("%d %siB", (long)(bytes / Math.pow(1024, e)), c);
     }
 
-    /**
-     * Returns a new CrawlSummary with the mime-type and status-code lists limited to the top-N results.
-     */
-/*    public CrawlSummary topN(long n) {
-        CrawlSummary summary = new CrawlSummary();
-        summary.totals = totals;
-        summary.mimeTypes = mimeTypes.entrySet().stream().parallel()
-                .sorted(comparing(e -> -e.getValue().getCount()))
-                .limit(n)
-                .collect(toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> b,
-                        LinkedHashMap::new));
-        summary.statusCodes = statusCodes.entrySet().stream().parallel()
-                .sorted(comparing(e -> -e.getValue().getCount()))
-                .limit(n)
-                .collect(toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> b,
-                        LinkedHashMap::new));
-        summary.registeredDomains = registeredDomains.entrySet().stream().parallel()
-                .sorted(comparing(e -> -e.getValue().getCount()))
-                .limit(n)
-                .collect(toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> b,
-                        LinkedHashMap::new));
-        summary.sizeHisto = sizeHisto;
-        return summary;
-    }*/
 
     public Stats getTotals() {
         return totals;
@@ -211,41 +178,6 @@ public class CrawlSummary {
         for (int i = 0; i < args.length; i++) {
             files.add(args[i]);
         }
-/*
-        long topN = 0;
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].startsWith("-")) {
-                switch (args[i]) {
-                    case "-g":
-                        switch (args[++i].toLowerCase(Locale.US)) {
-                            case "host":
-                                summarisier = CrawlSummary::byHost;
-                                break;
-                            case "registered-domain":
-                                summarisier = CrawlSummary::byRegisteredDomain;
-                                break;
-                            default:
-                                System.err.println("-g must be host or registered-domain");
-                                System.exit(1);
-                        }
-                        break;
-                    case "-n":
-                        topN = Long.parseLong(args[++i]);
-                        break;
-                    case "-h":
-                    case "--help":
-                        usage();
-                        return;
-                    default:
-                        System.err.println("Unknown option: " + args[i]);
-                        System.exit(1);
-                        return;
-                }
-            } else {
-                files.add(args[i]);
-            }
-        }
-*/
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
@@ -287,22 +219,6 @@ public class CrawlSummary {
 
         try (CrawlLogIterator log = new CrawlLogIterator(Paths.get(files.get(0)))) {
             Object summary = summarisier.apply(log);
-
-           /* // limit to top N results
-            if (topN > 0) {
-                if (summary instanceof Map) {
-                    Map<Object, CrawlSummary> map = new HashMap<>();
-                    for (Map.Entry<Object, CrawlSummary> entry : ((Map<Object, CrawlSummary>) summary).entrySet()) {
-                        map.put(entry.getKey(), entry.getValue().topN(topN));
-                    }
-                    summary = map;
-                } else if (summary instanceof CrawlSummary) {
-                    summary = ((CrawlSummary) summary).topN(topN);
-                } else {
-                    throw new AssertionError("unexpected");
-                }
-            }*/
-
             objectMapper.writeValue(System.out, summary);
         }
     }

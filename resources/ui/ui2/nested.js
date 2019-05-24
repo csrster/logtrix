@@ -105,11 +105,7 @@ function receivedText() {
                 title: 'Last Capture'
             },
         ]
-        //data: codeData,
-        //columns: [
-        //    {data: 'seed'},
-        //    {data: 'bytes'}
-        //]
+
     });
 
     $('#seeds-table tbody').on( 'click', 'tr > th', function () {

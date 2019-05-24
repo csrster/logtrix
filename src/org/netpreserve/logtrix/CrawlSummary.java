@@ -257,7 +257,7 @@ public class CrawlSummary {
             for (CrawlDataItem item: log) {
                 UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), item.getHoppath());
                 UriPlusDiscoveryPath value = null;
-                if (item.getHoppath().equals("")) {
+                if (item.getHoppath().trim().equals("-")) {
                     value = key;  //So the seed which gave rise to a seed uri was itself, which is logical enough
                 } else {
                     value = new UriPlusDiscoveryPath(item.getParentURL(), key.getParentDiscoveryPath());

@@ -1,50 +1,36 @@
-logtrix [![](https://maven-badges.herokuapp.com/maven-central/org.netpreserve/logtrix/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.netpreserve/logtrix) [![](https://www.javadoc.io/badge/org.netpreserve/logtrix.svg)](https://www.javadoc.io/doc/org.netpreserve/logtrix)
+logtrix 
 =======
+
+This repository is a series of modifications to the existing logtrix code. See https://sbforge.org/display/NAS/Better+QA+With+Logtrix
+for more discussion.
+
+
 
 Examples
 --------
 
-### Parsing a log file
-
-```java
-try (CrawlLogIterator log = new CrawlLogIterator(Paths.get("crawl.log"))) {
-    for (CrawlDataItem line : log) {
-        System.out.println(line.getStatusCode());
-        System.out.println(line.getURL());
-    }
-}
+### Building
 
 ```
-
-### Grouping the summary by various things
-
-```java
-CrawlSummary.byRegisteredDomain(log);
-CrawlSummary.byHost(log);
-CrawlSummary.byKey(log, item -> item.getCaptureBegan().toString().substring(0, 4)); // by year
+   mvn -DskipTests clean package
 ```
 
-### Limit top N results
+### Parsing To The Ungrouped Format
 
-```java
-CrawlSummary.build(log).topN(10); // top 10 status codes, mime-types etc
+```
+   java -cp 'target/logtrix-0.2.0-SNAPSHOT.jar:target/lib/*' org.netpreserve.logtrix.CrawlSummary  crawl_log.log >crawl_log.old.json
 ```
 
-### Working with status codes
+### Parsing To The Grouped-by-seed Format
 
-```java
-StatusCodes.describe(404);      // "Not found"
-StatusCodes.describe(-4);       // "HTTP timeout"
-StatusCodes.isError(-4);        // true
-StatusCodes.isServerError(503); // true
+```
+   java -cp 'target/logtrix-0.2.0-SNAPSHOT.jar:target/lib/*' org.netpreserve.logtrix.CrawlSummary -s crawl_log.log >crawl_log.new.json
 ```
 
-### Command-line interface
+### Starting a Webserver
+```
+cd resources/ui
+python -m SimpleHTTPServer 
+```
 
-Output a JSON crawl summary grouped by registered domain:
-
-    java org.netpreserve.logtrix.CrawlSummary -g registered-domain crawl.log
-    
-For more options:
-
-    java org.netpreserve.logtrix.CrawlSummary --help
+Then browse to http://localhost:8000 and select the ungrouped json file or http://localhost:8000/new.html and select the grouped file.

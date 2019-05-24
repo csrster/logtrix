@@ -173,12 +173,25 @@ public class CrawlSummary {
     public static void main(String[] args) throws IOException {
         List<String> files = new ArrayList<>();
         Function<Iterable<CrawlDataItem>, Object> summarisier = CrawlSummary::build;
-        summarisier = CrawlSummary::bySeed;
-
         for (int i = 0; i < args.length; i++) {
-            files.add(args[i]);
+            if (args[i].startsWith("-")) {
+                switch (args[i]) {
+                    case "-s":
+                        summarisier = CrawlSummary::bySeed;
+                        break;
+                    case "-h":
+                    case "--help":
+                        usage();
+                        return;
+                    default:
+                        System.err.println("Unknown option: " + args[i]);
+                        System.exit(1);
+                        return;
+                }
+            } else {
+                files.add(args[i]);
+            }
         }
-
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(WRITE_DATES_AS_TIMESTAMPS);
@@ -227,8 +240,8 @@ public class CrawlSummary {
         System.out.println("Usage: CrawlSummary [options...] crawl.log\n" +
                 "\n" +
                 "Options:\n" +
-                "  -g {host,registered-domain}   Group summary by host or registered domain\n" +
-                "  -n N                          Limit to top N results");
+                "  -s   Group summary by seed \n"
+               );
     }
 
     static class UriPlusDiscoveryPath {

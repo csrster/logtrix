@@ -177,7 +177,7 @@ function receivedText() {
                         },
                         {
                             data: 'dupbytesperc',
-                            title: '%age Of All Duplicate For This Seed',
+                            title: '%age Of All Duplicate Bytes For This Seed',
                             render: $.fn.dataTable.render.number( ',', '.', 2, '', '%' )
                         }
                     ]

@@ -73,19 +73,36 @@ public class CrawlSummary {
 
     private static String registeredDomain(CrawlDataItem item) {
         try {
-            String internetDomainName = InternetDomainName.from(URI.create(item.getURL()).getHost()).topPrivateDomain().toString();
-            if (internetDomainName == null || internetDomainName.length() == 0)  {
-                if (item.getURL().startsWith("dns:")) {
-                    internetDomainName = "dns";
+            URI uri = null;
+            try {
+                uri = URI.create(item.getURL());
+            } catch (Exception e) {
+                //Fallback that picks up most parse errors from illegal characters
+                uri = URI.create("http://" + item.getURL().split("/")[2]);
+            }
+            if (uri.getScheme().equals("dns")) {
+                return "dns";
+            } else {
+                String host = uri.getHost();
+                if (host == null) {
+                    host = uri.getAuthority();
+                }
+                InternetDomainName internetDomainName = null;
+                try {
+                    internetDomainName = InternetDomainName.from(host);
+                } catch (Exception e) {
+                    //Usually this means host is numeric IP so
+                    return host;
+                }
+                if (internetDomainName.isTopPrivateDomain()) {
+                    return internetDomainName.topPrivateDomain().toString();
+                } else {
+                    return host;
                 }
             }
-            return internetDomainName;
         } catch (Exception e) {
-            if (item.getURL().startsWith("dns:")) {
-                return("dns:");
-            } else {
-                return "unknown";
-            }
+            System.err.println("Could not find registered domain for " + item.getURL() + " " + e.getMessage());
+            return "unknown";
         }
     }
 

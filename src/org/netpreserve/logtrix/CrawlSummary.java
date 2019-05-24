@@ -63,15 +63,29 @@ public class CrawlSummary {
         });
     }
 
+    public static Map<String, CrawlSummary> bySeed(Iterable<CrawlDataItem> log) {
+        return groupedBy(log, item -> seedForURI.get(new UriPlusDiscoveryPath(item.getURL(), item.getHoppath())).uri);
+    }
+
     public static Map<String, CrawlSummary> byRegisteredDomain(Iterable<CrawlDataItem> log) {
         return groupedBy(log, item -> registeredDomain(item));
     }
 
     private static String registeredDomain(CrawlDataItem item) {
         try {
-            return InternetDomainName.from(URI.create(item.getURL()).getHost()).topPrivateDomain().toString();
+            String internetDomainName = InternetDomainName.from(URI.create(item.getURL()).getHost()).topPrivateDomain().toString();
+            if (internetDomainName == null || internetDomainName.length() == 0)  {
+                if (item.getURL().startsWith("dns:")) {
+                    internetDomainName = "dns";
+                }
+            }
+            return internetDomainName;
         } catch (Exception e) {
-            return "";
+            if (item.getURL().startsWith("dns:")) {
+                return("dns:");
+            } else {
+                return "unknown";
+            }
         }
     }
 
@@ -86,13 +100,7 @@ public class CrawlSummary {
         // }
         // stats.add(item)
         //
-        String discoveryPath = "";
-        if (Strings.isNullOrEmpty(item.getHoppath()) || item.getHoppath().equals("-")) {
-            discoveryPath = "";
-        } else {
-            discoveryPath = item.getHoppath();
-        }
-        final UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), discoveryPath);
+        final UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), item.getHoppath());
         try {
             seeds.computeIfAbsent(seedForURI.get(key).uri, seed -> new Stats()).add(item);
         } catch (NullPointerException e) {
@@ -181,6 +189,7 @@ public class CrawlSummary {
     public static void main(String[] args) throws IOException {
         List<String> files = new ArrayList<>();
         Function<Iterable<CrawlDataItem>, Object> summarisier = CrawlSummary::build;
+        summarisier = CrawlSummary::bySeed;
 
         for (int i = 0; i < args.length; i++) {
             files.add(args[i]);
@@ -229,29 +238,21 @@ public class CrawlSummary {
 
         try (CrawlLogIterator log = new CrawlLogIterator(Paths.get(files.get(0)))) {
             for (CrawlDataItem item: log) {
-                String discoveryPath = "";
-                if (Strings.isNullOrEmpty(item.getHoppath()) || item.getHoppath().equals("-")) {
-                    discoveryPath = "";
-                } else {
-                    discoveryPath = item.getHoppath();
-                }
-                UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), discoveryPath);
-                UriPlusDiscoveryPath value = new UriPlusDiscoveryPath(item.getParentURL(), key.getParentDiscoveryPath());
-                if (discoveryPath.equals("")) {
+                UriPlusDiscoveryPath key = new UriPlusDiscoveryPath(item.getURL(), item.getHoppath());
+                UriPlusDiscoveryPath value = null;
+                if (item.getHoppath().equals("")) {
                     value = key;  //So the seed which gave rise to a seed uri was itself, which is logical enough
-                }
-                if (key.uri.equals("http://www.rwpanel.dk/")) {
-                    System.err.println("Initialising with " + key + value);
+                } else {
+                    value = new UriPlusDiscoveryPath(item.getParentURL(), key.getParentDiscoveryPath());
                 }
                 seedForURI.put(key, value);
             }
         }
 
-        System.err.println("Starting seed-detection");
         for (UriPlusDiscoveryPath uriPlusDiscoveryPath: seedForURI.keySet()) {
             int depth = 0;
             boolean found = false;
-            while (!seedForURI.get(uriPlusDiscoveryPath).discoveryPath.equals("")) {
+            while (!found && !seedForURI.get(uriPlusDiscoveryPath).discoveryPath.equals("")) {
                 depth ++;
                 if (depth > 50) {
                     System.err.println("Looks pathological for " + uriPlusDiscoveryPath);
@@ -259,12 +260,10 @@ public class CrawlSummary {
                 }
                 UriPlusDiscoveryPath currentAncestor= seedForURI.get(uriPlusDiscoveryPath);
                 UriPlusDiscoveryPath nextParent = seedForURI.get(currentAncestor);
-                //if (nextParent == null) {
-                //    System.err.println("No parent for " + currentAncestor);
-                //}
-                //if (nextParent.discoveryPath.equals("")){
-                //    found = true;
-                //}
+                if (nextParent ==  null) {
+                    //Shouldn't happen, but then just assume current ancestor is the seed
+                    nextParent = new UriPlusDiscoveryPath(currentAncestor.uri, "");
+                }
                 seedForURI.put(uriPlusDiscoveryPath, nextParent);
             }
         }
@@ -313,6 +312,9 @@ public class CrawlSummary {
 
         public UriPlusDiscoveryPath(String uri, String discoveryPath) {
             this.uri = uri;
+            if (discoveryPath == null || discoveryPath.length() == 0 || discoveryPath.equals("-")) {
+                discoveryPath = "";
+            }
             this.discoveryPath = discoveryPath;
         }
 

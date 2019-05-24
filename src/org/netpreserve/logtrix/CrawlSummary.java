@@ -94,7 +94,7 @@ public class CrawlSummary {
                     //Usually this means host is numeric IP so
                     return host;
                 }
-                if (internetDomainName.isTopPrivateDomain()) {
+                if (internetDomainName.isUnderPublicSuffix()) {
                     return internetDomainName.topPrivateDomain().toString();
                 } else {
                     return host;
